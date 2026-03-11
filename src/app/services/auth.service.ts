@@ -1,4 +1,5 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { LocalStorageService } from '../local-storage.service';
 import { DatingProfile } from '../models/user.model';
@@ -7,6 +8,7 @@ import { DatingProfile } from '../models/user.model';
 export class AuthService {
   private localStorage = inject(LocalStorageService);
   private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
 
   readonly token = signal<string | null>(this.localStorage.get('token'));
   readonly currentUser = signal<DatingProfile | null>(this.getStoredUser());
@@ -15,6 +17,20 @@ export class AuthService {
   readonly isOnboarded = computed(() => !!this.currentUser()?.isOnboarded);
   readonly isPremium = computed(() => !!this.currentUser()?.isPremium);
   readonly userId = computed(() => this.currentUser()?.id ?? null);
+
+  constructor() {
+    // On the browser, re-hydrate from localStorage in case SSR initialized signals to null
+    if (isPlatformBrowser(this.platformId)) {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken && !this.token()) {
+        this.token.set(storedToken);
+      }
+      const storedUser = localStorage.getItem('user');
+      if (storedUser && !this.currentUser()) {
+        try { this.currentUser.set(JSON.parse(storedUser)); } catch { /* ignore */ }
+      }
+    }
+  }
 
   private getStoredUser(): DatingProfile | null {
     const stored = this.localStorage.get('user');

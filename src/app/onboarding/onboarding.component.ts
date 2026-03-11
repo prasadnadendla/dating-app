@@ -141,8 +141,10 @@ export class OnboardingComponent implements OnInit {
   }
 
   async onPhotoSelect(event: Event, index: number) {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
     if (!file) return;
+    input.value = '';
     this.photoUploading.set(true);
     try {
       const result = await this.queryService.uploadImage(file);

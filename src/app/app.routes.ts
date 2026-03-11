@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
-import { authGuard, onboardedGuard } from './guards/auth.guard';
+import { authGuard, guestGuard, onboardedGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
+    loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent),
+    canActivate: [guestGuard]
   },
   {
     path: 'onboarding',
