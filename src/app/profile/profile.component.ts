@@ -8,22 +8,21 @@ import { NotificationService } from '../services/notification.service';
 import { DatingProfile, Intent } from '../models/user.model';
 
 const GET_MY_PROFILE = `
-  query GetMyProfile {
-    myProfile {
-      id name age gender city photos voiceIntroUrl
-      intent tags motherTongue religion community
-      education profession isVerified verifiedType
-      clubs { id name icon }
-      isPremium sparkPassExpiry isOnboarded
+  query GetMyProfile($uid: uuid!) {
+    da_users_by_pk(id: $uid) {
+      id name age gender city photos voice_intro_url
+      intent tags mother_tongue religion community
+      education profession is_verified verified_type
+      is_premium spark_pass_expiry is_onboarded
     }
   }
 `;
 
 const UPDATE_PROFILE = `
-  mutation UpdateDatingProfile($input: UpdateProfileInput!) {
-    updateDatingProfile(input: $input) {
-      id name age city photos intent tags motherTongue
-      religion community education profession voiceIntroUrl
+  mutation UpdateDatingProfile($id: uuid!, $input: da_users_set_input!) {
+    update_da_users_by_pk(pk_columns: {id: $id}, _set: $input) {
+      id name age city photos intent tags mother_tongue
+      religion community education profession voice_intro_url
     }
   }
 `;
@@ -76,11 +75,35 @@ export class ProfileComponent implements OnInit {
 
   readonly photos = computed(() => this.profile()?.photos ?? []);
 
+  private mapProfile(row: any): DatingProfile {
+    return {
+      id: row.id,
+      name: row.name,
+      age: row.age,
+      gender: row.gender,
+      city: row.city,
+      photos: row.photos ?? [],
+      voiceIntroUrl: row.voice_intro_url,
+      intent: row.intent,
+      tags: row.tags ?? [],
+      motherTongue: row.mother_tongue,
+      religion: row.religion,
+      community: row.community,
+      education: row.education,
+      profession: row.profession,
+      isVerified: row.is_verified,
+      verifiedType: row.verified_type,
+      isPremium: row.is_premium,
+      sparkPassExpiry: row.spark_pass_expiry,
+      isOnboarded: row.is_onboarded,
+    };
+  }
+
   ngOnInit() {
-    this.queryService.watchQuery<{ myProfile: DatingProfile }>(GET_MY_PROFILE)
+    this.queryService.watchQuery<{ da_users_by_pk: DatingProfile }>(GET_MY_PROFILE, { uid: this.authService.userId() })
       .valueChanges.subscribe({
         next: ({ data }) => {
-          this.profile.set((data?.myProfile as DatingProfile) ?? null);
+          this.profile.set(data?.da_users_by_pk ? this.mapProfile(data.da_users_by_pk) : null);
           this.loading.set(false);
         },
         error: () => this.loading.set(false)
@@ -135,9 +158,10 @@ export class ProfileComponent implements OnInit {
   async saveProfile() {
     this.saving.set(true);
     try {
-      const result = await this.queryService.mutate<{ updateDatingProfile: DatingProfile }>(
+      const result = await this.queryService.mutate<{ update_da_users_by_pk: any }>(
         UPDATE_PROFILE,
         {
+          id: this.profile()?.id,
           input: {
             name: this.editName,
             age: +this.editAge,
@@ -150,9 +174,10 @@ export class ProfileComponent implements OnInit {
           }
         }
       ).toPromise();
-      if (result?.data?.updateDatingProfile) {
-        this.profile.update(p => ({ ...p!, ...result.data!.updateDatingProfile }));
-        this.authService.setUser({ ...this.authService.currentUser()!, ...result.data.updateDatingProfile });
+      if (result?.data?.update_da_users_by_pk) {
+        const updated = this.mapProfile(result.data.update_da_users_by_pk);
+        this.profile.update(p => ({ ...p!, ...updated }));
+        this.authService.setUser({ ...this.authService.currentUser()!, ...updated });
       }
       this.isEditing.set(false);
       this.notification.success('Profile updated!');
