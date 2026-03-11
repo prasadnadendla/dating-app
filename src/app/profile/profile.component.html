@@ -1,0 +1,267 @@
+<div class="flex flex-col min-h-full pb-4">
+  <!-- Header -->
+  <div class="flex items-center justify-between px-4 pt-4 pb-3 bg-white border-b border-gray-100">
+    <h1 class="text-xl font-bold text-[#1A2744]">My Profile</h1>
+    <div class="flex gap-2">
+      @if (!isEditing()) {
+        <button (click)="startEdit()"
+          class="px-3 py-1.5 rounded-xl bg-[#e328f0]/10 text-[#e328f0] text-sm font-medium">
+          Edit
+        </button>
+      } @else {
+        <button (click)="cancelEdit()"
+          class="px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium">
+          Cancel
+        </button>
+        <button (click)="saveProfile()" [disabled]="saving()"
+          class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#F05A28] to-[#e328f0] text-white text-sm font-medium disabled:opacity-60">
+          @if (saving()) { Saving… } @else { Save }
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <div class="w-8 h-8 border-2 border-[#e328f0] border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  } @else if (profile()) {
+    <div class="flex flex-col gap-0">
+      <!-- Photos -->
+      <div class="bg-white mb-2">
+        <div class="relative">
+          <!-- Main photo -->
+          <div class="aspect-[4/5] bg-gray-200 overflow-hidden">
+            @if (photos()[currentPhotoIndex()]) {
+              <img [src]="photos()[currentPhotoIndex()]" class="w-full h-full object-cover" />
+            } @else {
+              <div class="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                <span class="text-5xl">👤</span>
+                <p class="text-sm mt-2">No photo</p>
+              </div>
+            }
+          </div>
+
+          <!-- Photo dots -->
+          @if (photos().length > 1) {
+            <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-1">
+              @for (p of photos(); track $index; let i = $index) {
+                <button (click)="currentPhotoIndex.set(i)"
+                  class="h-1.5 rounded-full transition-all"
+                  [class]="currentPhotoIndex() === i ? 'w-6 bg-white' : 'w-1.5 bg-white/50'"></button>
+              }
+            </div>
+          }
+
+          <!-- Verified badge -->
+          @if (profile()!.isVerified) {
+            <div class="absolute top-4 right-4 bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+              ✓ Verified
+            </div>
+          }
+
+          <!-- Premium badge -->
+          @if (profile()!.isPremium) {
+            <div class="absolute top-4 left-4 bg-gradient-to-r from-[#F05A28] to-[#e328f0] text-white text-xs font-semibold px-3 py-1 rounded-full">
+              ✨ Spark Pass
+            </div>
+          }
+        </div>
+
+        <!-- Edit photos -->
+        @if (isEditing()) {
+          <div class="px-4 py-3">
+            <p class="text-sm font-medium text-gray-600 mb-2">Photos (up to 6)</p>
+            <div class="grid grid-cols-3 gap-2">
+              @for (slot of photoSlots; track $index; let i = $index) {
+                <div class="aspect-square rounded-xl overflow-hidden bg-gray-100 relative">
+                  @if (editPhotos()[i]) {
+                    <img [src]="editPhotos()[i]" class="w-full h-full object-cover" />
+                    <button (click)="removePhoto(i)"
+                      class="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full text-xs flex items-center justify-center">✕</button>
+                  } @else {
+                    <label class="w-full h-full flex items-center justify-center cursor-pointer text-gray-400 hover:text-[#e328f0]">
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
+                      </svg>
+                      <input type="file" accept="image/*" class="hidden" (change)="onPhotoSelect($event, i)" />
+                    </label>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Info section -->
+      <div class="bg-white px-4 py-4 mb-2">
+        @if (!isEditing()) {
+          <div class="flex items-start justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-[#1A2744]">{{ profile()!.name }}, {{ profile()!.age }}</h2>
+              <p class="text-gray-500 text-sm">📍 {{ profile()!.city }}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 mt-3">
+            <span class="bg-[#e328f0]/10 text-[#e328f0] text-xs px-3 py-1 rounded-full capitalize font-medium">
+              {{ profile()!.intent }}
+            </span>
+            @if (profile()!.motherTongue) {
+              <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
+                {{ profile()!.motherTongue }}
+              </span>
+            }
+            @if (profile()!.education) {
+              <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
+                🎓 {{ profile()!.education }}
+              </span>
+            }
+            @if (profile()!.profession) {
+              <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
+                💼 {{ profile()!.profession }}
+              </span>
+            }
+          </div>
+        } @else {
+          <div class="flex flex-col gap-3">
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1 block">Name</label>
+              <input type="text" [(ngModel)]="editName"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#e328f0] outline-none text-sm" />
+            </div>
+            <div class="flex gap-3">
+              <div class="flex-1">
+                <label class="text-xs font-medium text-gray-500 mb-1 block">Age</label>
+                <input type="number" [(ngModel)]="editAge" min="18" max="60"
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#e328f0] outline-none text-sm" />
+              </div>
+              <div class="flex-1">
+                <label class="text-xs font-medium text-gray-500 mb-1 block">City</label>
+                <input type="text" [(ngModel)]="editCity"
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#e328f0] outline-none text-sm" />
+              </div>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1 block">Profession</label>
+              <input type="text" [(ngModel)]="editProfession"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#e328f0] outline-none text-sm" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-1 block">Education</label>
+              <input type="text" [(ngModel)]="editEducation"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#e328f0] outline-none text-sm" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-500 mb-2 block">Looking for</label>
+              <div class="flex gap-2">
+                @for (opt of intentOptions; track opt.value) {
+                  <button (click)="editIntent = opt.value"
+                    class="flex-1 py-2 rounded-xl border text-xs font-medium transition-all capitalize"
+                    [class]="editIntent === opt.value ? 'border-[#e328f0] bg-[#e328f0]/5 text-[#e328f0]' : 'border-gray-200 text-gray-500'">
+                    {{ opt.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Voice intro -->
+      <div class="bg-white px-4 py-4 mb-2">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-[#1A2744] text-sm">Voice Intro</h3>
+          @if (isEditing()) {
+            <button (click)="toggleVoiceRecord()"
+              class="text-xs font-medium px-3 py-1.5 rounded-xl transition-colors"
+              [class]="isRecording() ? 'bg-red-100 text-red-500' : 'bg-[#e328f0]/10 text-[#e328f0]'">
+              {{ isRecording() ? '⏹ Stop' : '🎙️ Record 30s' }}
+            </button>
+          }
+        </div>
+        @if (profile()!.voiceIntroUrl) {
+          <button (click)="playVoiceIntro()"
+            class="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-[#F05A28]/10 to-[#e328f0]/10 border border-[#e328f0]/20">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#F05A28] to-[#e328f0] flex items-center justify-center text-white">
+              ▶
+            </div>
+            <div>
+              <p class="text-sm font-medium text-[#1A2744]">Play voice intro</p>
+              <p class="text-xs text-gray-500">Tap to listen</p>
+            </div>
+          </button>
+        } @else {
+          <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gray-50 border border-dashed border-gray-200">
+            <span class="text-2xl">🎙️</span>
+            <p class="text-sm text-gray-500">Record a 30-sec voice intro — it gets 3x more matches!</p>
+          </div>
+        }
+      </div>
+
+      <!-- Interests -->
+      <div class="bg-white px-4 py-4 mb-2">
+        <h3 class="font-semibold text-[#1A2744] text-sm mb-3">Interests</h3>
+        @if (!isEditing()) {
+          <div class="flex flex-wrap gap-2">
+            @for (tag of profile()!.tags; track tag) {
+              <span class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">{{ tag }}</span>
+            }
+          </div>
+        } @else {
+          <div class="flex flex-wrap gap-2">
+            @for (tag of INTEREST_TAGS; track tag) {
+              <button (click)="toggleTag(tag)"
+                class="px-3 py-1.5 rounded-full border text-xs font-medium transition-all"
+                [class]="editTags().includes(tag) ? 'border-[#e328f0] bg-[#e328f0] text-white' : 'border-gray-200 text-gray-600'">
+                {{ tag }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Clubs -->
+      @if (profile()!.clubs && profile()!.clubs!.length > 0) {
+        <div class="bg-white px-4 py-4 mb-2">
+          <h3 class="font-semibold text-[#1A2744] text-sm mb-3">My Clubs</h3>
+          <div class="flex flex-wrap gap-2">
+            @for (club of profile()!.clubs!; track club.id) {
+              <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#e328f0]/10 text-[#e328f0] text-xs font-medium">
+                {{ club.icon }} {{ club.name }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Upgrade CTA -->
+      @if (!profile()!.isPremium) {
+        <div class="mx-4 mb-2 rounded-3xl bg-gradient-to-r from-[#F05A28] to-[#e328f0] p-4 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-bold text-sm">Get Spark Pass ✨</p>
+              <p class="text-xs opacity-80 mt-0.5">See who likes you + unlimited likes</p>
+            </div>
+            <button (click)="router.navigate(['/upgrade'])"
+              class="bg-white text-[#e328f0] font-semibold text-xs px-4 py-2 rounded-xl">
+              ₹499/mo
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Settings / Logout -->
+      <div class="bg-white px-4 py-4 mt-2">
+        <button (click)="authService.logout()"
+          class="flex items-center gap-3 text-gray-500 text-sm w-full py-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /cart
+Disallow: /login
+Disallow: /account
+Disallow: /search
+
+Sitemap: https://genzyy.in/sitemap.xml

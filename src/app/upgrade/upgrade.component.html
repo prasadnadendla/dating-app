@@ -1,0 +1,90 @@
+<div class="flex flex-col min-h-full">
+  <!-- Header -->
+  <div class="bg-gradient-to-br from-[#F05A28] to-[#e328f0] px-6 pt-8 pb-10 text-white">
+    <h1 class="text-2xl font-bold">Spark Pass ✨</h1>
+    <p class="text-sm opacity-90 mt-1">Unlock all features &amp; find your match faster</p>
+
+    <!-- Feature highlights -->
+    <div class="mt-6 flex flex-col gap-2.5">
+      @for (feat of features; track feat) {
+        <div class="flex items-center gap-3">
+          <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs">✓</span>
+          <span class="text-sm">{{ feat }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Pricing cards -->
+  <div class="px-4 -mt-5 flex flex-col gap-3 pb-6">
+    @for (item of pricingItems; track item.id) {
+      <button (click)="selectedItem.set(item.id)"
+        class="relative rounded-2xl p-4 border-2 text-left transition-all"
+        [class]="selectedItem() === item.id
+          ? 'border-[#e328f0] bg-[#e328f0]/5 shadow-lg'
+          : 'border-gray-200 bg-white'">
+
+        @if (item.highlight) {
+          <span class="absolute -top-2.5 right-4 bg-gradient-to-r from-[#F05A28] to-[#e328f0] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            BEST VALUE
+          </span>
+        }
+
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">{{ item.icon }}</span>
+          <div class="flex-1">
+            <p class="font-semibold text-[#1A2744] text-sm">{{ item.title }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">{{ item.description }}</p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="font-bold text-[#1A2744]">{{ item.price }}</p>
+            <p class="text-[10px] text-gray-400">{{ item.priceLabel }}</p>
+          </div>
+        </div>
+
+        @if (selectedItem() === item.id) {
+          <div class="absolute top-4 left-4 w-5 h-5 rounded-full bg-[#e328f0] flex items-center justify-center text-white text-xs">
+            ✓
+          </div>
+        }
+      </button>
+    }
+
+    <!-- Free for women -->
+    <div class="rounded-2xl p-4 bg-pink-50 border border-pink-200 flex items-center gap-3">
+      <span class="text-2xl">👸</span>
+      <div>
+        <p class="font-semibold text-[#1A2744] text-sm">Free for Women</p>
+        <p class="text-xs text-gray-500">All features unlocked at no cost</p>
+      </div>
+      <span class="ml-auto text-lg font-bold text-green-500">₹0</span>
+    </div>
+  </div>
+
+  <!-- Payment methods -->
+  <div class="px-4 pb-4">
+    <p class="text-xs text-gray-400 text-center mb-3">Secure payment via</p>
+    <div class="flex justify-center gap-4 text-xs text-gray-500">
+      <span class="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 font-medium">UPI</span>
+      <span class="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 font-medium">Card</span>
+      <span class="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 font-medium">Net Banking</span>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-4"
+    style="padding-bottom: max(16px, env(safe-area-inset-bottom))">
+    <button (click)="purchase()" [disabled]="purchasing()"
+      class="w-full py-4 rounded-2xl bg-gradient-to-r from-[#F05A28] to-[#e328f0] text-white font-semibold text-base shadow-lg disabled:opacity-60 active:scale-[0.98] transition-all">
+      @if (purchasing()) {
+        <span class="flex items-center justify-center gap-2">
+          <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          Processing…
+        </span>
+      } @else {
+        Continue — {{ getSelectedPrice() }}
+      }
+    </button>
+    <p class="text-center text-[10px] text-gray-400 mt-2">Cancel anytime. No auto-renewal.</p>
+  </div>
+</div>

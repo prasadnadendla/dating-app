@@ -1,0 +1,203 @@
+<div class="flex flex-col h-full bg-gray-50">
+  <!-- Header -->
+  <div class="flex items-center justify-between px-4 pt-4 pb-2">
+    <div>
+      <h1 class="text-xl font-bold text-[#1A2744]">Discover</h1>
+      @if (currentProfile()) {
+        <p class="text-xs text-gray-400">{{ currentProfile()!.city }}</p>
+      }
+    </div>
+    <button (click)="showFilters.set(!showFilters())"
+      class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 border border-gray-100">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Card Stack -->
+  <div class="flex-1 relative mx-4 mb-4" style="min-height: 0">
+
+    @if (loading() && profiles().length === 0) {
+      <!-- Skeleton loader -->
+      <div class="absolute inset-0 rounded-3xl bg-gray-200 animate-pulse"></div>
+    } @else if (profiles().length === 0 || currentIndex() >= profiles().length) {
+      <!-- Empty state -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-8">
+        <span class="text-6xl mb-4">🌟</span>
+        <h3 class="text-lg font-bold text-[#1A2744] mb-2">You're all caught up!</h3>
+        <p class="text-gray-500 text-sm">Check back later for new profiles in your area.</p>
+      </div>
+    } @else {
+      <!-- Background cards (stack effect) -->
+      @if (nextProfile()) {
+        <div class="absolute inset-0 rounded-3xl overflow-hidden shadow-lg"
+          style="transform: scale(0.95) translateY(8px); z-index: 1; background: #ddd">
+          @if (nextProfile()!.photos[0]) {
+            <img [src]="nextProfile()!.photos[0]" class="w-full h-full object-cover" />
+          }
+        </div>
+      }
+      @if (thirdProfile()) {
+        <div class="absolute inset-0 rounded-3xl overflow-hidden shadow-md"
+          style="transform: scale(0.9) translateY(16px); z-index: 0; background: #ccc">
+        </div>
+      }
+
+      <!-- Active card -->
+      <div class="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing select-none"
+        style="z-index: 2; touch-action: none"
+        [style.transform]="cardTransform()"
+        [style.transition]="isDragging() ? 'none' : 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)'"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)">
+
+        <!-- Photo -->
+        @if (currentProfile()!.photos[0]) {
+          <img [src]="currentProfile()!.photos[0]" class="w-full h-full object-cover pointer-events-none" />
+        } @else {
+          <div class="w-full h-full bg-gradient-to-br from-[#F05A28]/20 to-[#e328f0]/20 flex items-center justify-center">
+            <span class="text-8xl">👤</span>
+          </div>
+        }
+
+        <!-- Gradient overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent pointer-events-none"></div>
+
+        <!-- LIKE indicator -->
+        @if (dragX() > 30) {
+          <div class="absolute top-12 left-6 border-4 border-green-400 text-green-400 px-4 py-2 rounded-xl text-2xl font-bold rotate-[-20deg] opacity-90">
+            LIKE 💚
+          </div>
+        }
+        <!-- PASS indicator -->
+        @if (dragX() < -30) {
+          <div class="absolute top-12 right-6 border-4 border-red-400 text-red-400 px-4 py-2 rounded-xl text-2xl font-bold rotate-[20deg] opacity-90">
+            PASS ✕
+          </div>
+        }
+
+        <!-- Verified badge -->
+        @if (currentProfile()!.isVerified) {
+          <div class="absolute top-4 right-4 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            Verified
+          </div>
+        }
+
+        <!-- Profile info -->
+        <div class="absolute bottom-4 left-4 right-4 text-white pointer-events-none">
+          <div class="flex items-end gap-2">
+            <h2 class="text-2xl font-bold leading-none">{{ currentProfile()!.name }}, {{ currentProfile()!.age }}</h2>
+          </div>
+          <p class="text-sm opacity-80 mt-0.5">📍 {{ currentProfile()!.city }}</p>
+          <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+            @if (currentProfile()!.compatibilityScore) {
+              <span class="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                {{ currentProfile()!.compatibilityScore }}% match
+              </span>
+            }
+            <span class="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full capitalize">
+              {{ currentProfile()!.intent }}
+            </span>
+            @if (currentProfile()!.motherTongue) {
+              <span class="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">
+                {{ currentProfile()!.motherTongue }}
+              </span>
+            }
+          </div>
+          <!-- Tags -->
+          <div class="flex flex-wrap gap-1 mt-2">
+            @for (tag of currentProfile()!.tags.slice(0, 4); track tag) {
+              <span class="bg-white/10 backdrop-blur-sm text-white text-xs px-2 py-0.5 rounded-full border border-white/20">
+                {{ tag }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- Voice intro button -->
+        @if (currentProfile()!.voiceIntroUrl) {
+          <button (click)="playVoiceIntro(currentProfile()!)"
+            class="absolute bottom-20 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white border border-white/30 pointer-events-auto">
+            🎙️
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Action Buttons -->
+  @if (currentProfile()) {
+    <div class="flex items-center justify-center gap-5 px-4 pb-4">
+      <button (click)="pass()"
+        class="w-14 h-14 rounded-full bg-white shadow-lg flex items-center justify-center text-2xl border border-gray-100 active:scale-90 transition-transform">
+        ✕
+      </button>
+      <button (click)="superLike()"
+        class="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-xl border border-gray-100 active:scale-90 transition-transform">
+        ⭐
+      </button>
+      <button (click)="like()"
+        class="w-14 h-14 rounded-full bg-gradient-to-br from-[#F05A28] to-[#e328f0] shadow-lg flex items-center justify-center text-2xl active:scale-90 transition-transform">
+        ❤️
+      </button>
+    </div>
+  }
+</div>
+
+<!-- It's a Match modal -->
+@if (showMatchModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+    (click)="dismissMatch()">
+    <div class="bg-white rounded-3xl p-8 mx-6 text-center shadow-2xl" (click)="$event.stopPropagation()">
+      <div class="text-6xl mb-4">🎉</div>
+      <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#F05A28] to-[#e328f0]">
+        It's a Match!
+      </h2>
+      <p class="text-gray-500 mt-2 mb-6">You and {{ matchedProfile()?.name }} liked each other</p>
+      <div class="flex gap-3">
+        <button (click)="dismissMatch()" class="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-600 font-medium">
+          Keep Swiping
+        </button>
+        <button (click)="openChat()" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#F05A28] to-[#e328f0] text-white font-semibold">
+          Send Message
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Filters panel -->
+@if (showFilters()) {
+  <div class="fixed inset-0 z-40 flex items-end" (click)="showFilters.set(false)">
+    <div class="bg-white rounded-t-3xl w-full p-6 shadow-2xl max-h-[70vh] overflow-y-auto"
+      (click)="$event.stopPropagation()">
+      <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5"></div>
+      <h3 class="text-lg font-bold text-[#1A2744] mb-4">Filters</h3>
+      <div class="flex flex-col gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-600 mb-2 block">Looking for</label>
+          <div class="flex gap-2">
+            @for (opt of ['serious','casual','marriage']; track opt) {
+              <button (click)="filterIntent.set(filterIntent() === opt ? '' : opt)"
+                class="px-3 py-1.5 rounded-full border text-sm transition-all capitalize"
+                [class]="filterIntent() === opt ? 'border-[#e328f0] bg-[#e328f0] text-white' : 'border-gray-200 text-gray-600'">
+                {{ opt }}
+              </button>
+            }
+          </div>
+        </div>
+        <button (click)="applyFilters()"
+          class="w-full py-3 rounded-2xl bg-gradient-to-r from-[#F05A28] to-[#e328f0] text-white font-semibold">
+          Apply Filters
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,16 @@
+<div class="flex flex-col h-dvh bg-gray-50">
+  <div class="flex-1 overflow-y-auto overflow-x-hidden">
+    <router-outlet />
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bg-white border-t border-gray-100 flex items-stretch shrink-0" style="padding-bottom: env(safe-area-inset-bottom)">
+    @for (tab of tabs; track tab.path) {
+      <a [routerLink]="tab.path" routerLinkActive="text-[#e328f0]"
+        class="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-gray-400 transition-colors relative">
+        <span class="text-2xl leading-none">{{ tab.icon }}</span>
+        <span class="text-[10px] font-medium">{{ tab.label }}</span>
+      </a>
+    }
+  </nav>
+</div>

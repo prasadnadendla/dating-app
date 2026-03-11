@@ -1,0 +1,52 @@
+<div class="flex flex-col h-full">
+  <!-- Header -->
+  <div class="px-4 pt-4 pb-3 bg-white border-b border-gray-100">
+    <h1 class="text-xl font-bold text-[#1A2744]">Community Clubs</h1>
+    <p class="text-xs text-gray-500 mt-0.5">Join up to 3 clubs — shown on your profile &amp; used in matching</p>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-4 py-4">
+    @if (loading()) {
+      <div class="grid grid-cols-2 gap-3">
+        @for (s of [1,2,3,4,5,6]; track s) {
+          <div class="h-40 rounded-2xl bg-gray-200 animate-pulse"></div>
+        }
+      </div>
+    } @else {
+      <div class="grid grid-cols-2 gap-3">
+        @for (club of clubs(); track club.id) {
+          <div class="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+            <!-- Club card -->
+            <div class="p-4 flex flex-col items-center text-center">
+              <span class="text-4xl mb-2">{{ club.icon }}</span>
+              <h3 class="font-semibold text-[#1A2744] text-sm">{{ club.name }}</h3>
+              <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ club.description }}</p>
+              <p class="text-[10px] text-gray-400 mt-1">{{ formatCount(club.memberCount) }} members</p>
+            </div>
+
+            <!-- Join/Leave button -->
+            <div class="px-3 pb-3">
+              @if (club.isJoined) {
+                <button (click)="leaveClub(club)"
+                  class="w-full py-2 rounded-xl bg-[#e328f0]/10 text-[#e328f0] text-xs font-semibold transition-colors active:bg-[#e328f0]/20">
+                  Joined ✓
+                </button>
+              } @else {
+                <button (click)="joinClub(club)" [disabled]="joinedCount() >= 3 && !club.isJoined"
+                  class="w-full py-2 rounded-xl bg-gradient-to-r from-[#F05A28] to-[#e328f0] text-white text-xs font-semibold transition-all active:scale-95 disabled:opacity-40">
+                  Join
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (joinedCount() >= 3) {
+        <p class="text-center text-xs text-gray-400 mt-4">
+          You've joined 3/3 clubs. Leave one to join another.
+        </p>
+      }
+    }
+  </div>
+</div>

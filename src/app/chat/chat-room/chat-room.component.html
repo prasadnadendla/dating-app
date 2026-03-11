@@ -1,0 +1,149 @@
+<div class="flex flex-col h-dvh bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white border-b border-gray-100 flex items-center gap-3 px-4 py-3"
+    style="padding-top: max(12px, env(safe-area-inset-top))">
+    <button (click)="router.navigate(['/matches'])" class="p-1 -ml-1 text-gray-500">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+
+    @if (matchProfile()) {
+      <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+        @if (matchProfile()!.photos[0]) {
+          <img [src]="matchProfile()!.photos[0]" class="w-full h-full object-cover" />
+        } @else {
+          <div class="w-full h-full flex items-center justify-center">👤</div>
+        }
+      </div>
+      <div class="flex-1">
+        <p class="font-semibold text-[#1A2744] text-sm leading-none">{{ matchProfile()!.name }}</p>
+        <p class="text-xs text-green-500 mt-0.5">Online</p>
+      </div>
+    }
+
+    <button (click)="showMenu.set(!showMenu())" class="p-2 text-gray-400">
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Menu -->
+  @if (showMenu()) {
+    <div class="absolute top-16 right-4 z-50 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      <button (click)="showReportSheet.set(true); showMenu.set(false)"
+        class="flex items-center gap-3 px-4 py-3 text-sm text-red-500 w-full hover:bg-red-50">
+        🚨 Report
+      </button>
+      <button (click)="blockUser()"
+        class="flex items-center gap-3 px-4 py-3 text-sm text-gray-600 w-full hover:bg-gray-50">
+        🚫 Block
+      </button>
+    </div>
+  }
+
+  <!-- Messages -->
+  <div #messagesEl class="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+    @if (loading()) {
+      <div class="flex justify-center py-8">
+        <div class="w-6 h-6 border-2 border-[#e328f0] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }
+
+    <!-- Icebreakers (show when no messages) -->
+    @if (!loading() && messages().length === 0 && isWomenFirst()) {
+      <div class="text-center py-4">
+        <p class="text-sm text-gray-500 mb-3">Break the ice! 👋</p>
+        <div class="flex flex-col gap-2">
+          @for (prompt of ICEBREAKERS; track prompt) {
+            <button (click)="sendIcebreaker(prompt)"
+              class="px-4 py-2.5 rounded-2xl bg-white border border-gray-200 text-sm text-[#1A2744] text-left shadow-sm active:bg-gray-50 transition-colors">
+              {{ prompt }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    @for (msg of messages(); track msg.id) {
+      <div class="flex" [class]="isMine(msg) ? 'justify-end' : 'justify-start'">
+        <div class="max-w-[75%]">
+          @if (msg.type === 'voice') {
+            <div class="flex items-center gap-2 px-4 py-3 rounded-2xl shadow-sm"
+              [class]="isMine(msg) ? 'bg-gradient-to-r from-[#F05A28] to-[#e328f0] text-white rounded-br-sm' : 'bg-white text-[#1A2744] rounded-bl-sm'">
+              <button (click)="playVoice(msg)" class="text-lg">▶️</button>
+              <div class="flex gap-0.5 items-center">
+                @for (b of [4,6,8,5,9,7,6,4,5,8,6]; track $index) {
+                  <div class="w-1 rounded-full bg-current opacity-60"
+                    [style.height]="b * 3 + 'px'"></div>
+                }
+              </div>
+              <span class="text-xs opacity-70">0:{{ msg.id.slice(-2) }}s</span>
+            </div>
+          } @else {
+            <div class="px-4 py-3 rounded-2xl shadow-sm text-sm"
+              [class]="isMine(msg) ? 'bg-gradient-to-r from-[#F05A28] to-[#e328f0] text-white rounded-br-sm' : 'bg-white text-[#1A2744] rounded-bl-sm'">
+              {{ msg.content }}
+            </div>
+          }
+          <p class="text-[10px] text-gray-400 mt-1" [class]="isMine(msg) ? 'text-right' : 'text-left'">
+            {{ timeStr(msg.createdAt) }}
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Input bar -->
+  <div class="bg-white border-t border-gray-100 px-4 py-3 flex items-end gap-3"
+    style="padding-bottom: max(12px, env(safe-area-inset-bottom))">
+
+    @if (!canMessage()) {
+      <div class="flex-1 text-center text-sm text-gray-500 py-2">
+        @if (matchProfile()?.gender === 'male') {
+          Wait for her to say hello first 💌
+        } @else {
+          Say hello first — you go first here! 💪
+        }
+      </div>
+    } @else {
+      <button (click)="toggleVoiceRecord()"
+        class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors"
+        [class]="isRecording() ? 'bg-red-100 text-red-500' : 'bg-gray-100 text-gray-500'">
+        🎙️
+      </button>
+
+      <div class="flex-1 flex items-end bg-gray-100 rounded-2xl px-4 py-2 min-h-[40px] max-h-32">
+        <textarea [(ngModel)]="messageText" placeholder="Type a message…" rows="1"
+          class="flex-1 bg-transparent text-sm text-[#1A2744] resize-none outline-none max-h-24"
+          (keydown.enter)="onEnterKey($event)"
+          (input)="autoResize($event)"></textarea>
+      </div>
+
+      <button (click)="sendMessage()" [disabled]="!messageText.trim() && !isRecording()"
+        class="w-10 h-10 rounded-full bg-gradient-to-br from-[#F05A28] to-[#e328f0] flex items-center justify-center shrink-0 disabled:opacity-40 active:scale-90 transition-all">
+        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    }
+  </div>
+</div>
+
+<!-- Report sheet -->
+@if (showReportSheet()) {
+  <div class="fixed inset-0 z-50 flex items-end bg-black/50" (click)="showReportSheet.set(false)">
+    <div class="bg-white rounded-t-3xl w-full p-6" (click)="$event.stopPropagation()">
+      <h3 class="text-lg font-bold text-[#1A2744] mb-4">Report this profile</h3>
+      <div class="flex flex-col gap-2">
+        @for (reason of reportReasons; track reason) {
+          <button (click)="submitReport(reason)"
+            class="text-left px-4 py-3 rounded-2xl border border-gray-200 text-sm text-gray-600 active:bg-gray-50">
+            {{ reason }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

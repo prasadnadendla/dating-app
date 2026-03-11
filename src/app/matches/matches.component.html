@@ -1,0 +1,112 @@
+<div class="flex flex-col h-full">
+  <!-- Header -->
+  <div class="px-4 pt-4 pb-3 bg-white border-b border-gray-100">
+    <h1 class="text-xl font-bold text-[#1A2744]">Matches</h1>
+  </div>
+
+  <div class="flex-1 overflow-y-auto">
+    <!-- Who liked you (teaser) -->
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-semibold text-gray-600">Who liked you</h3>
+        @if (!isPremium()) {
+          <button (click)="router.navigate(['/upgrade'])"
+            class="text-xs text-[#e328f0] font-semibold">Unlock ₹199/week →</button>
+        }
+      </div>
+      <div class="flex gap-2 overflow-x-auto pb-1">
+        @if (loading()) {
+          @for (s of [1,2,3]; track s) {
+            <div class="w-16 h-16 rounded-2xl bg-gray-200 animate-pulse shrink-0"></div>
+          }
+        } @else if (whoLikedMe().length === 0) {
+          <div class="text-sm text-gray-400 py-2">No likes yet — keep swiping!</div>
+        } @else {
+          @for (profile of whoLikedMe(); track profile.id) {
+            <div class="shrink-0 w-16 h-16 rounded-2xl overflow-hidden relative cursor-pointer"
+              (click)="!isPremium() && router.navigate(['/upgrade'])">
+              @if (profile.photos[0]) {
+                <img [src]="profile.photos[0]" class="w-full h-full object-cover"
+                  [class]="!isPremium() ? 'blur-md' : ''" />
+              } @else {
+                <div class="w-full h-full bg-gradient-to-br from-[#F05A28]/30 to-[#e328f0]/30 flex items-center justify-center text-2xl"
+                  [class]="!isPremium() ? 'blur-md' : ''">👤</div>
+              }
+              @if (!isPremium()) {
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-lg">🔒</span>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="h-px bg-gray-100 mx-4"></div>
+
+    <!-- Matches list -->
+    <div class="px-4 py-3">
+      <h3 class="text-sm font-semibold text-gray-600 mb-3">Your matches</h3>
+
+      @if (loading()) {
+        @for (s of [1,2,3,4]; track s) {
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-gray-200 animate-pulse shrink-0"></div>
+            <div class="flex-1">
+              <div class="h-4 bg-gray-200 rounded w-24 mb-2 animate-pulse"></div>
+              <div class="h-3 bg-gray-100 rounded w-40 animate-pulse"></div>
+            </div>
+          </div>
+        }
+      } @else if (matches().length === 0) {
+        <div class="flex flex-col items-center py-10 text-center">
+          <span class="text-5xl mb-3">💘</span>
+          <h3 class="font-semibold text-[#1A2744] mb-1">No matches yet</h3>
+          <p class="text-sm text-gray-500">Keep swiping to find your match!</p>
+        </div>
+      } @else {
+        @for (match of matches(); track match.id) {
+          <button class="flex items-center gap-3 w-full mb-3 text-left"
+            (click)="openChat(match)">
+            <div class="relative shrink-0">
+              <div class="w-14 h-14 rounded-2xl overflow-hidden bg-gray-200">
+                @if (match.profile.photos[0]) {
+                  <img [src]="match.profile.photos[0]" class="w-full h-full object-cover" />
+                } @else {
+                  <div class="w-full h-full flex items-center justify-center text-2xl">👤</div>
+                }
+              </div>
+              @if (match.unreadCount > 0) {
+                <span class="absolute -top-1 -right-1 w-5 h-5 bg-[#e328f0] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {{ match.unreadCount > 9 ? '9+' : match.unreadCount }}
+                </span>
+              }
+              @if (match.profile.isVerified) {
+                <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-[10px]">✓</span>
+              }
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[#1A2744] text-sm">{{ match.profile.name }}</span>
+                @if (match.lastMessage) {
+                  <span class="text-xs text-gray-400">{{ timeAgo(match.lastMessage.createdAt) }}</span>
+                }
+              </div>
+              @if (match.lastMessage) {
+                <p class="text-sm text-gray-500 truncate mt-0.5"
+                  [class.font-semibold]="match.unreadCount > 0"
+                  [class.text-[#1A2744]]="match.unreadCount > 0">
+                  @if (match.lastMessage.type === 'voice') { 🎙️ Voice message }
+                  @else { {{ match.lastMessage.content }} }
+                </p>
+              } @else {
+                <p class="text-sm text-[#e328f0] mt-0.5">Say hello! 👋</p>
+              }
+            </div>
+          </button>
+        }
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,12 @@
+<router-outlet />
+
+<!-- Notification toasts -->
+@for (toast of notificationService.toasts(); track toast.id) {
+  <div class="fixed top-4 left-4 right-4 z-[100] flex justify-center pointer-events-none animate-slide-down">
+    <div class="pointer-events-auto px-4 py-3 rounded-2xl shadow-xl text-sm font-medium max-w-sm w-full backdrop-blur-sm"
+      [class]="toast.type === 'success' ? 'bg-green-500 text-white' : toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-[#1A2744] text-white'"
+      (click)="notificationService.dismiss(toast.id)">
+      {{ toast.message }}
+    </div>
+  </div>
+}
