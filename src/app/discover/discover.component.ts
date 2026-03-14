@@ -94,7 +94,7 @@ export class DiscoverComponent implements OnInit {
 
   readonly cardTransform = computed(() => {
     const x = this.dragX();
-    const y = this.dragY() * 0.3;
+    const y = this.dragY();
     const rotation = x * 0.05;
     return `translateX(${x}px) translateY(${y}px) rotate(${rotation}deg)`;
   });
@@ -178,10 +178,13 @@ export class DiscoverComponent implements OnInit {
     if (!this.isDragging() || event.pointerId !== this.activePointerId) return;
     this.isDragging.set(false);
     this.activePointerId = -1;
-    const threshold = isPlatformBrowser(this.platformId) ? window.innerWidth * 0.3 : 120;
-    if (this.dragX() > threshold) {
+    const xThreshold = isPlatformBrowser(this.platformId) ? window.innerWidth * 0.3 : 120;
+    const yThreshold = isPlatformBrowser(this.platformId) ? window.innerHeight * 0.2 : 100;
+    if (this.dragY() < -yThreshold && Math.abs(this.dragX()) < xThreshold) {
+      this.triggerSwipe('super_like');
+    } else if (this.dragX() > xThreshold) {
       this.triggerSwipe('like');
-    } else if (this.dragX() < -threshold) {
+    } else if (this.dragX() < -xThreshold) {
       this.triggerSwipe('pass');
     } else {
       this.dragX.set(0);
@@ -199,8 +202,13 @@ export class DiscoverComponent implements OnInit {
 
     const userId = this.authService.userId();
     const width = isPlatformBrowser(this.platformId) ? window.innerWidth : 400;
-    const direction = action === 'pass' ? -1 : 1;
-    this.dragX.set(direction * (width + 100));
+    const height = isPlatformBrowser(this.platformId) ? window.innerHeight : 800;
+    if (action === 'super_like') {
+      this.dragY.set(-(height + 100));
+    } else {
+      const direction = action === 'pass' ? -1 : 1;
+      this.dragX.set(direction * (width + 100));
+    }
 
     try {
       await this.queryService.mutate(
