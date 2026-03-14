@@ -6,6 +6,7 @@ import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
 import { LocalStorageService } from '../local-storage.service';
 import { Intent, Gender } from '../models/user.model';
+import { ImageUrlPipe } from '../elements/image-url.pipe';
 
 const INTEREST_TAGS = [
   'Cricket', 'Bollywood', 'Fitness', 'Foodie', 'Travel', 'Books', 'Music',
@@ -18,7 +19,7 @@ const LANGUAGES = ['Hindi', 'English', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ImageUrlPipe],
   templateUrl: './onboarding.component.html'
 })
 export class OnboardingComponent implements OnInit {

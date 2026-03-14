@@ -9,9 +9,10 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 })
 export class ShellComponent {
   readonly tabs = [
-    { path: '/discover', icon: '🔥', label: 'Discover' },
-    { path: '/matches',  icon: '💬', label: 'Matches' },
-    { path: '/clubs',    icon: '👥', label: 'Clubs' },
-    { path: '/profile',  icon: '👤', label: 'Profile' },
+    { path: '/discover',  icon: '🔥', label: 'Discover' },
+    { path: '/liked-me',  icon: '💝', label: 'Likes' },
+    { path: '/matches',   icon: '💬', label: 'Messages' },
+    { path: '/clubs',     icon: '👥', label: 'Clubs' },
+    { path: '/profile',   icon: '👤', label: 'Profile' },
   ];
 }

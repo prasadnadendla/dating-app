@@ -32,6 +32,10 @@ export const routes: Routes = [
         loadComponent: () => import('./matches/matches.component').then(m => m.MatchesComponent)
       },
       {
+        path: 'liked-me',
+        loadComponent: () => import('./liked-me/liked-me.component').then(m => m.LikedMeComponent)
+      },
+      {
         path: 'clubs',
         loadComponent: () => import('./clubs/clubs.component').then(m => m.ClubsComponent)
       },

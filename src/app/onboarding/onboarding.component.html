@@ -106,7 +106,7 @@
           @for (slot of photoSlots; track $index; let i = $index) {
             <div class="aspect-square rounded-2xl overflow-hidden bg-gray-100 relative">
               @if (photos()[i]) {
-                <img [src]="photos()[i]" class="w-full h-full object-cover" />
+                <img [src]="photos()[i] | imageUrl:'thumb'" class="w-full h-full object-cover" />
                 <button (click)="removePhoto(i)"
                   class="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full text-xs flex items-center justify-center">✕</button>
               } @else {

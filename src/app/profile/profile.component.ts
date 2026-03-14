@@ -6,6 +6,7 @@ import { QueryService } from '../query.service';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
 import { DatingProfile, Intent } from '../models/user.model';
+import { ImageUrlPipe } from '../elements/image-url.pipe';
 
 const GET_MY_PROFILE = `
   query GetMyProfile($uid: uuid!) {
@@ -36,7 +37,7 @@ const INTEREST_TAGS = [
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ImageUrlPipe],
   templateUrl: './profile.component.html'
 })
 export class ProfileComponent implements OnInit {

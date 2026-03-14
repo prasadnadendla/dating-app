@@ -3,28 +3,30 @@ import { Router } from '@angular/router';
 import { QueryService } from '../query.service';
 import { AuthService } from '../services/auth.service';
 import { Match } from '../models/match.model';
-import { DatingProfile } from '../models/user.model';
+import { ImageUrlPipe } from '../elements/image-url.pipe';
 
 const GET_MATCHES = `
-  query GetMatches {
-    matches {
-      id matchedAt unreadCount
-      profile { id name age photos isVerified }
-      lastMessage { content type createdAt senderId }
+  query GetMatches($where: da_matches_bool_exp!) {
+    da_matches(where: $where, order_by: {created_at: desc}) {
+      id created_at is_active
+      user1 { id name age photos is_verified city }
+      user2 { id name age photos is_verified city }
     }
   }
 `;
 
-const GET_WHO_LIKED_ME = `
-  query GetWhoLikedMe {
-    whoLikedMe { id photos name age }
-  }
-`;
+interface HasuraMatch {
+  id: string;
+  created_at: number;
+  is_active: boolean;
+  user1: { id: string; name: string; age: number; photos: string[]; is_verified: boolean; city: string };
+  user2: { id: string; name: string; age: number; photos: string[]; is_verified: boolean; city: string };
+}
 
 @Component({
   selector: 'app-matches',
   standalone: true,
-  imports: [],
+  imports: [ImageUrlPipe],
   templateUrl: './matches.component.html'
 })
 export class MatchesComponent implements OnInit {
@@ -33,33 +35,50 @@ export class MatchesComponent implements OnInit {
   readonly router = inject(Router);
 
   matches = signal<Match[]>([]);
-  whoLikedMe = signal<DatingProfile[]>([]);
   loading = signal(true);
 
-  readonly isPremium = this.authService.isPremium;
-
   ngOnInit() {
-    this.queryService.watchQuery<{ matches: Match[] }>(GET_MATCHES)
-      .valueChanges.subscribe({
-        next: ({ data }) => {
-          this.matches.set((data?.matches as Match[]) ?? []);
-          this.loading.set(false);
-        },
-        error: () => this.loading.set(false)
-      });
+    const userId = this.authService.userId();
 
-    this.queryService.query<{ whoLikedMe: DatingProfile[] }>(GET_WHO_LIKED_ME)
-      ?.subscribe({
-        next: ({ data }) => this.whoLikedMe.set((data?.whoLikedMe as DatingProfile[]) ?? [])
-      });
+    this.queryService.watchQuery<{ da_matches: HasuraMatch[] }>(
+      GET_MATCHES,
+      { where: { _or: [{ user1_id: { _eq: userId } }, { user2_id: { _eq: userId } }], is_active: { _eq: true } } }
+    ).valueChanges.subscribe({
+      next: ({ data }) => {
+        this.matches.set((data?.da_matches as HasuraMatch[] ?? []).map(m => this.mapMatch(m, userId!)));
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  private mapMatch(row: HasuraMatch, userId: string): Match {
+    const other = row.user1.id === userId ? row.user2 : row.user1;
+    return {
+      id: row.id,
+      matchedAt: new Date(row.created_at * 1000).toISOString(),
+      unreadCount: 0,
+      profile: {
+        id: other.id,
+        name: other.name,
+        age: other.age,
+        photos: other.photos ?? [],
+        isVerified: other.is_verified,
+        city: other.city,
+        gender: 'other',
+        intent: 'serious',
+        tags: [],
+      },
+    };
   }
 
   openChat(match: Match) {
     this.router.navigate(['/chat', match.id]);
   }
 
-  timeAgo(isoDate: string): string {
-    const diff = Date.now() - new Date(isoDate).getTime();
+  timeAgo(epochOrIso: string): string {
+    const date = epochOrIso.includes('T') ? new Date(epochOrIso) : new Date(epochOrIso);
+    const diff = Date.now() - date.getTime();
     const m = Math.floor(diff / 60000);
     if (m < 1) return 'now';
     if (m < 60) return `${m}m`;

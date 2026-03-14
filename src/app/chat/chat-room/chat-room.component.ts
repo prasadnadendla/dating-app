@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { Message } from '../../models/message.model';
 import { DatingProfile } from '../../models/user.model';
+import { ImageUrlPipe } from '../../elements/image-url.pipe';
 
 const GET_MESSAGES = `
   query GetMessages($matchId: ID!, $cursor: String) {
@@ -43,7 +44,7 @@ const ICEBREAKERS = [
 @Component({
   selector: 'app-chat-room',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ImageUrlPipe],
   templateUrl: './chat-room.component.html'
 })
 export class ChatRoomComponent implements OnInit, AfterViewInit {

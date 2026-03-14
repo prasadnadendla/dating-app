@@ -33,7 +33,7 @@
           <!-- Main photo -->
           <div class="aspect-[4/5] bg-gray-200 overflow-hidden">
             @if (photos()[currentPhotoIndex()]) {
-              <img [src]="photos()[currentPhotoIndex()]" class="w-full h-full object-cover" />
+              <img [src]="photos()[currentPhotoIndex()] | imageUrl" class="w-full h-full object-cover" />
             } @else {
               <div class="w-full h-full flex flex-col items-center justify-center text-gray-400">
                 <span class="text-5xl">👤</span>
@@ -76,7 +76,7 @@
               @for (slot of photoSlots; track $index; let i = $index) {
                 <div class="aspect-square rounded-xl overflow-hidden bg-gray-100 relative">
                   @if (editPhotos()[i]) {
-                    <img [src]="editPhotos()[i]" class="w-full h-full object-cover" />
+                    <img [src]="editPhotos()[i] | imageUrl:'thumb'" class="w-full h-full object-cover" />
                     <button (click)="removePhoto(i)"
                       class="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full text-xs flex items-center justify-center">✕</button>
                   } @else {
