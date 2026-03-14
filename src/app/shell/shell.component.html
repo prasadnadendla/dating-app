@@ -1,16 +1,46 @@
+
 <div class="flex flex-col h-dvh bg-gray-50">
   <div class="flex-1 overflow-y-auto overflow-x-hidden">
     <router-outlet />
   </div>
+<nav class="bg-white border-t border-gray-100 flex items-stretch shrink-0 pb-[env(safe-area-inset-bottom)]">
+  @for (tab of tabs; track tab.path) {
+<a [routerLink]="tab.path" 
+       routerLinkActive="text-[#e328f0]"
+       #rla="routerLinkActive"
+       class="group flex-1 flex flex-col items-center justify-center py-2 gap-1 text-gray-400 transition-colors relative">
+      
+      <div class="relative">
+        <svg 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          stroke-width="2" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+          class="size-6 transition-transform group-active:scale-95">
+          <path [attr.d]="tab.svg" />
+        </svg>
 
-  <!-- Bottom Navigation -->
-  <nav class="bg-white border-t border-gray-100 flex items-stretch shrink-0" style="padding-bottom: env(safe-area-inset-bottom)">
-    @for (tab of tabs; track tab.path) {
-      <a [routerLink]="tab.path" routerLinkActive="text-[#e328f0]"
-        class="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-gray-400 transition-colors relative">
-        <span class="text-2xl leading-none">{{ tab.icon }}</span>
-        <span class="text-[10px] font-medium">{{ tab.label }}</span>
-      </a>
-    }
-  </nav>
+        @if (tab.count > 0) {
+          <span class="absolute -top-1 -right-1 flex size-4">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+            <span class="relative inline-flex size-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
+              {{ tab.count > 9 ? '9+' : tab.count }}
+            </span>
+          </span>
+        }
+      </div>
+
+      <span class="text-[10px] font-semibold tracking-wide uppercase">
+        {{ tab.label }}
+      </span>
+
+      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-t-full transition-all duration-300"
+           [class.bg-[#e328f0]]="rla.isActive"
+           [class.bg-transparent]="!rla.isActive">
+      </div>
+    </a>
+  }
+</nav>
 </div>
